@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Models
+*.pkl
+
+# Data
+data/*.csv
+
+# IDE
+.idea/
+.vscode/
+
+# OS
+.DS_Store
