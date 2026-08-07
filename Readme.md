@@ -101,33 +101,40 @@ The current MVP implements a hybrid fraud analysis pipeline.
 
 ```text
 
-                  Transaction Request
+                           Transaction Request
+
+                     |
+                     v
+
+          Fraud Analysis Service
+
+                     |
+          --------------------------------
+          |                              |
+          v                              v
+
+   ML Fraud Analysis              Rule Engine
+          |
+          |
+   -----------------
+   |               |
+   v               v
+
+Fraud Score     SHAP Explanation
+
+
+          |
+          |
+          --------------------------------
+                         |
+                         v
+
+    Fraud Assessment & Recommendation Layer
 
                          |
                          v
 
-              Fraud Analysis Service
-
-                         |
-              -----------------------
-              |                     |
-              v                     v
-
-        ML Fraud Model        Rule Engine
-
-              |                     |
-              -----------------------
-                         |
-                         v
-
-        Fraud Assessment & Recommendation Layer
-
-                         |
-                         v
-
-              Investigation Summary
-
-```
+          Investigation Summary
 
 ---
 
