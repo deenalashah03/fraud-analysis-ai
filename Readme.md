@@ -2,29 +2,29 @@
 
 An AI-powered fraud analysis and investigation platform that combines machine learning, deterministic risk signals, and explainable AI to analyze suspicious financial transactions.
 
-The platform helps investigators understand **why a transaction appears risky** by combining predictive models with contextual evidence.
+The platform helps investigators understand **why a transaction appears risky** by combining predictive fraud scoring with supporting evidence.
 
 ---
 
 # Overview
 
-Fraud Analysis AI is a portfolio-grade fraud investigation assistant designed to demonstrate modern fraud detection and explainability patterns.
+Fraud Analysis AI is a portfolio-grade fraud investigation assistant designed to demonstrate modern fraud analysis patterns used in financial systems.
 
 The system focuses on:
 
 * Machine learning-based fraud risk prediction
 * Rule-based risk signal generation
+* Explainable fraud analysis
 * Evidence aggregation
-* Explainable fraud assessments
 * Investigation recommendations
 
-The platform is designed to evolve toward advanced capabilities such as Retrieval-Augmented Generation (RAG) and agentic investigation workflows.
+The platform is designed to evolve toward advanced capabilities such as Retrieval-Augmented Generation (RAG) and agent-assisted investigation workflows.
 
 ---
 
 # Problem Statement
 
-Financial institutions process millions of transactions every day. Identifying fraudulent activity requires analyzing large amounts of transactional data while maintaining explainability and auditability.
+Financial institutions process millions of transactions every day. Identifying suspicious activity requires analyzing large volumes of transactional data while maintaining explainability, consistency, and auditability.
 
 Traditional fraud systems typically rely on:
 
@@ -38,8 +38,8 @@ Advantages:
 
 Limitations:
 
-* Difficult to maintain at scale
-* Cannot adapt quickly to new fraud behaviors
+* Difficult to adapt to new fraud behaviors
+* Require continuous rule maintenance
 
 ---
 
@@ -47,13 +47,13 @@ Limitations:
 
 Advantages:
 
-* Detect complex transaction patterns
-* Learn from historical fraud data
+* Detect complex behavioral patterns
+* Learn from historical transaction data
 
 Limitations:
 
-* Predictions may lack explainability
-* Can struggle with new fraud scenarios
+* Predictions may lack transparency
+* Require explainability for investigation workflows
 
 ---
 
@@ -61,7 +61,7 @@ This project explores a hybrid fraud analysis approach combining:
 
 * Machine learning predictions
 * Deterministic risk signals
-* Explainable investigation summaries
+* Explainable investigation outputs
 
 ---
 
@@ -84,12 +84,12 @@ Examples:
 
 The goal of this platform is to:
 
-* Analyze suspicious financial transactions
+* Analyze suspicious transactions
 * Estimate fraud risk
 * Identify contributing risk factors
 * Provide investigation evidence
 * Generate explainable fraud assessments
-* Recommend next actions
+* Recommend investigation actions
 
 The system assists investigators; it does not autonomously approve or block transactions.
 
@@ -97,50 +97,50 @@ The system assists investigators; it does not autonomously approve or block tran
 
 # Current MVP Architecture
 
-The current MVP implements a hybrid fraud analysis pipeline.
+The MVP implements a hybrid fraud analysis pipeline.
 
 ```text
+                     Transaction Request
 
-                           Transaction Request
+                              |
+                              v
 
-                     |
-                     v
+                 Fraud Analysis Service
 
-          Fraud Analysis Service
+                              |
+              --------------------------------
+              |                              |
+              v                              v
 
-                     |
-          --------------------------------
-          |                              |
-          v                              v
+       ML Fraud Analysis              Rule Engine
+              |
+              |
+        -----------------
+        |               |
+        v               v
 
-   ML Fraud Analysis              Rule Engine
-          |
-          |
-   -----------------
-   |               |
-   v               v
-
-Fraud Score     SHAP Explanation
+   Fraud Score      SHAP Explanation
 
 
-          |
-          |
-          --------------------------------
-                         |
-                         v
+              |
+              |
+              --------------------------------
+                             |
+                             v
 
-    Fraud Assessment & Recommendation Layer
+        Fraud Assessment & Recommendation Layer
 
-                         |
-                         v
+                             |
+                             v
 
-          Investigation Summary
+                 Investigation Summary
+```
 
 ---
 
 # Core Components
 
-## 1. Machine Learning Fraud Model
+## 1. Machine Learning Fraud Analysis
 
 The ML model analyzes transaction characteristics and predicts fraud likelihood.
 
@@ -154,7 +154,8 @@ Example output:
 
 ```json
 {
-  "fraud_probability": 0.82
+  "fraud_probability": 0.82,
+  "risk_level": "HIGH"
 }
 ```
 
@@ -163,16 +164,41 @@ Potential models:
 * XGBoost
 * Logistic Regression
 * Random Forest
+* Autoencoder (for anomaly detection)
 
 ---
 
-# 2. Rule Engine
+## 2. SHAP Explainability Layer
+
+SHAP provides transparency into ML model predictions.
+
+The purpose is to explain:
+
+* Which features influenced the fraud score
+* Why the model considers a transaction risky
+
+Example:
+
+```json
+{
+  "fraud_probability": 0.82,
+  "top_factors": [
+    "NEW_DEVICE",
+    "HIGH_AMOUNT",
+    "LOCATION_MISMATCH"
+  ]
+}
+```
+
+SHAP does not make fraud decisions. It provides explainability evidence for investigators.
+
+---
+
+## 3. Rule Engine
 
 The rule engine generates deterministic risk signals.
 
-Rules do not make the final fraud decision.
-
-They provide additional evidence that helps explain why a transaction appears suspicious.
+Rules provide additional evidence but do not make the final fraud decision.
 
 Examples:
 
@@ -195,11 +221,12 @@ Example output:
 
 ---
 
-# 3. Fraud Assessment & Recommendation Layer
+## 4. Fraud Assessment & Recommendation Layer
 
 This layer combines:
 
 * ML fraud probability
+* SHAP explanation
 * Rule-based risk signals
 
 to produce an investigation assessment.
@@ -209,23 +236,20 @@ Example:
 ```json
 {
   "risk_score": 0.82,
-
   "risk_level": "HIGH",
-
   "risk_signals": [
     "NEW_DEVICE",
     "LOCATION_MISMATCH"
   ],
-
   "recommendation": "MANUAL_REVIEW"
 }
 ```
 
 ---
 
-# 4. Investigation Summary
+## 5. Investigation Summary
 
-The platform generates a human-readable explanation.
+The platform generates a human-readable investigation summary.
 
 Example:
 
@@ -233,9 +257,9 @@ Example:
 Transaction shows elevated fraud risk.
 
 Evidence:
-- High transaction amount
+- Transaction amount significantly exceeds normal behavior
 - New device detected
-- Location differs from historical behavior
+- Location differs from historical activity
 
 Recommendation:
 Perform additional verification.
@@ -245,94 +269,89 @@ Perform additional verification.
 
 # Future Architecture Extensions
 
-The MVP architecture is intentionally designed to support additional AI capabilities.
+The MVP architecture is intentionally designed to support additional capabilities without changing the core fraud analysis pipeline.
 
 ---
 
 # Retrieval-Augmented Generation (RAG)
 
-Future versions can add a fraud knowledge retrieval layer.
+Future versions can add a knowledge retrieval layer.
 
 Purpose:
 
 * Retrieve similar historical fraud cases
 * Provide investigation context
-* Improve explanation quality
+* Improve investigation explanations
 
 Potential knowledge sources:
 
-* Fraud investigation summaries
-* Historical fraud cases
-* Security playbooks
-* Fraud patterns
+* Historical fraud investigations
+* Fraud case summaries
+* Security guidelines
+* Investigation notes
 
 Future flow:
 
 ```text
+                 Fraud Assessment
 
-Fraud Assessment
+                         |
+                         v
 
-        |
-        v
+              Vector Database Retrieval
 
-Vector Database Retrieval
+                         |
+                         v
 
-        |
-        v
+              Similar Fraud Cases
 
-Similar Fraud Cases
+                         |
+                         v
 
-        |
-        v
-
-Enhanced Investigation Summary
-
+           Enhanced Investigation Summary
 ```
 
 ---
 
-# Agentic Investigation Workflow
+# Investigation Agent Workflow
 
-Future versions can introduce LangGraph-based investigation workflows.
+Future versions can introduce a LangGraph-based Investigation Agent.
 
-The goal is not to replace fraud models but to orchestrate investigation steps.
+The agent does not replace fraud models.
+
+Its purpose is to coordinate investigation steps by combining:
+
+* ML fraud scoring
+* Rule evaluation
+* Historical case retrieval
 
 Future architecture:
 
 ```text
+                 Transaction Request
 
-                 Transaction
+                         |
+                         v
 
-                      |
-                      v
+              Investigation Agent
 
-            Investigation Agent
+                         |
+          --------------------------------
+          |              |               |
+          v              v               v
 
-                      |
-        --------------------------------
-        |              |               |
-        v              v               v
+      ML Tool       Rule Tool        RAG Tool
 
-     ML Tool      Rule Tool       RAG Tool
+                         |
+                         v
 
-                      |
-                      v
+             Investigation Result
 
-        Investigation Result
+                         |
+                         v
 
-                      |
-                      v
-
-          Recommended Action
-
+              Recommended Action
 ```
-
-The Investigation Agent coordinates:
-
-* Fraud scoring
-* Risk signal evaluation
-* Knowledge retrieval
-* Investigation reasoning
 
 ---
 
@@ -342,26 +361,17 @@ The Investigation Agent coordinates:
 
 Maintains context during a single investigation.
 
-Example:
+Stores:
 
-```
-Transaction Details
-
-Fraud Score
-
-Risk Signals
-
-Retrieved Evidence
-
-Investigation Findings
-```
-
-Implemented using workflow state management.
+* Transaction details
+* Fraud score
+* Risk signals
+* Retrieved evidence
+* Investigation findings
 
 Purpose:
 
-* Maintain context across investigation steps
-* Allow multiple tools to contribute evidence
+* Maintain investigation context across workflow steps
 
 ---
 
@@ -382,7 +392,7 @@ Stores:
 Purpose:
 
 * Retrieve similar scenarios
-* Improve investigation quality over time
+* Improve investigation quality
 
 ---
 
@@ -425,7 +435,7 @@ Purpose:
 
 # Repository Structure
 
-```
+```text
 fraud-analysis-ai/
 
 ├── README.md
@@ -434,27 +444,35 @@ fraud-analysis-ai/
 │   ├── architecture.md
 │   └── design-decisions.md
 │
+├── diagrams/
+│
 ├── fraud-engine-python/
 │
 │   ├── training/
-│   │   └── train_model.py
+│   │   ├── analyze_dataset.py
+│   │   ├── preprocess.py
+│   │   ├── train_model.py
+│   │   └── evaluate.py
+│   │
+│   ├── inference/
+│   │   └── predictor.py
+│   │
+│   ├── features/
+│   │   └── feature_engineering.py
 │   │
 │   ├── models/
 │   │   └── fraud_model.pkl
 │   │
-│   ├── services/
-│   │   ├── predictor.py
-│   │   └── rules.py
+│   ├── rules/
+│   │   └── rule_engine.py
 │   │
 │   └── app.py
 │
 ├── backend-java/
 │
-├── notebooks/
-│
 ├── data/
 │
-└── diagrams/
+└── requirements.md
 ```
 
 ---
@@ -501,7 +519,7 @@ This project follows these principles:
 * Separate prediction from decision-making
 * Keep fraud analysis explainable
 * Combine machine learning with deterministic controls
-* Use GenAI for context and reasoning, not uncontrolled decisions
+* Use GenAI for reasoning and context, not fraud detection
 * Design toward enterprise-style extensibility
 
 ---
@@ -512,18 +530,19 @@ Current implementation:
 
 ✅ Fraud risk prediction
 ✅ Rule-based risk signals
+✅ SHAP-based explainability
 ✅ Fraud assessment generation
-✅ Explainable investigation output
+✅ Investigation recommendations
 
 Future extensions:
 
 * RAG-based fraud knowledge retrieval
-* LangGraph investigation workflows
-* Stateful AI investigation agents
-* Production-scale integrations
+* LangGraph Investigation Agent
+* Stateful investigation workflows
+* Enterprise integrations
 
 ---
 
 # Project Vision
 
-The long-term vision is to create an AI-assisted fraud investigation platform that helps analysts make faster, better-informed decisions by combining predictive models, business knowledge, and intelligent reasoning.
+The long-term vision is to create an AI-assisted fraud investigation platform that helps analysts make faster, better-informed decisions by combining predictive models, business rules, explainable AI, and intelligent reasoning.
