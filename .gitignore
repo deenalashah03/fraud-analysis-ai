@@ -1,23 +1,14 @@
 # Python
 __pycache__/
-*.pyc
+*.py[cod]
 
 # Virtual environment
-venv/
-.env
+.venv/
 
-# Jupyter
-.ipynb_checkpoints/
+# Raw datasets
+data/
 
-# Models
-*.pkl
-
-# Data
-data/*.csv
-
-# IDE
-.idea/
-.vscode/
-
-# OS
-.DS_Store
+# Generated model artifacts
+fraud-engine-python/models/**/*.json
+fraud-engine-python/models/**/*.pkl
+fraud-engine-python/models/**/*.joblib

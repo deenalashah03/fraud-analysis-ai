@@ -2,26 +2,32 @@ from preprocess import preprocess_data
 from xgboost import XGBClassifier
 import os
 import pandas as pd
+
 from sklearn.metrics import (
     roc_auc_score,
     average_precision_score,
     precision_score,
     recall_score,
     f1_score,
-    confusion_matrix,
-    classification_report
+    confusion_matrix
 )
 
-def save_evaluation_result(
-        model_name,
+
+def save_final_evaluation_result(
         threshold,
         auc_roc,
         auc_pr,
         precision,
         recall,
         f1,
-        cm
+        cm,
+        feature_count,
+        feature_experiment
 ):
+    """
+    Save final XGBoost test-set evaluation result.
+    """
+
     analysis_dir = "../analysis"
     os.makedirs(analysis_dir, exist_ok=True)
 
@@ -31,7 +37,10 @@ def save_evaluation_result(
     )
 
     result = {
-        "model": model_name,
+        "model": "XGBoost",
+        "feature_count": feature_count,
+        "feature_experiment": feature_experiment,
+        "evaluation_stage": "test_final",
         "threshold": threshold,
         "auc_roc": auc_roc,
         "auc_pr": auc_pr,
@@ -46,16 +55,18 @@ def save_evaluation_result(
 
     result_df = pd.DataFrame([result])
 
-    # Append if file already exists
-    # Otherwise create a new file with headers
+    # Append to existing CSV
     if os.path.exists(file_path):
+
         result_df.to_csv(
             file_path,
             mode="a",
             header=False,
             index=False
         )
+
     else:
+
         result_df.to_csv(
             file_path,
             mode="w",
@@ -63,56 +74,153 @@ def save_evaluation_result(
             index=False
         )
 
-    print(f"Evaluation result saved to: {file_path}")
+    print(
+        f"Final test evaluation saved to: {file_path}"
+    )
+
+
 def evaluate_model():
 
-    # Load and preprocess data
-    X_train, X_validation, X_test, y_train, y_validation, y_test = preprocess_data()
+    # --------------------------------------------------
+    # Load preprocessed data
+    # --------------------------------------------------
+
+    X_train, X_validation, X_test, \
+        y_train, y_validation, y_test = preprocess_data()
 
     print("Test data shape:", X_test.shape)
 
-    # Load trained model
+    # --------------------------------------------------
+    # Feature information
+    # --------------------------------------------------
+
+    feature_count = X_test.shape[1]
+
+    feature_experiment = "final_xgboost"
+
+    print(
+        f"Features used by final XGBoost: {feature_count}"
+    )
+
+    # --------------------------------------------------
+    # Load FINAL tuned XGBoost model
+    # --------------------------------------------------
+
     model = XGBClassifier(
         enable_categorical=True
     )
 
-    model.load_model("../model/fraud_xgboost.json")
+    model.load_model(
+        "../model/fraud_xgboost.json"
+    )
 
-    print("Model loaded successfully.")
+    print("Final XGBoost model loaded successfully.")
 
-    # Generate probability predictions
-    y_test_proba = model.predict_proba(X_test)[:, 1]
-
-    # Convert probabilities to class predictions
-    threshold = 0.9
-
-    y_test_pred = (y_test_proba >= threshold).astype(int)
     # --------------------------------------------------
-    # Evaluation Metrics
+    # Generate TEST probabilities
     # --------------------------------------------------
 
-    auc_roc = roc_auc_score(y_test, y_test_proba)
+    y_test_proba = (
+        model.predict_proba(X_test)[:, 1]
+    )
 
-    auc_pr = average_precision_score(y_test, y_test_proba)
+    # --------------------------------------------------
+    # LOCKED THRESHOLD
+    #
+    # Selected using validation-set F1.
+    # --------------------------------------------------
 
-    precision = precision_score(y_test, y_test_pred)
+    threshold = 0.4
 
-    recall = recall_score(y_test, y_test_pred)
+    y_test_pred = (
+            y_test_proba >= threshold
+    ).astype(int)
 
-    f1 = f1_score(y_test, y_test_pred)
+    print(
+        f"Final threshold: {threshold}"
+    )
 
-    cm = confusion_matrix(y_test, y_test_pred)
+    # --------------------------------------------------
+    # Probability-based metrics
+    # --------------------------------------------------
 
-    save_evaluation_result(
-        model_name="XGBoost",
+    auc_roc = roc_auc_score(
+        y_test,
+        y_test_proba
+    )
+
+    auc_pr = average_precision_score(
+        y_test,
+        y_test_proba
+    )
+
+    # --------------------------------------------------
+    # Threshold-based metrics
+    # --------------------------------------------------
+
+    precision = precision_score(
+        y_test,
+        y_test_pred,
+        zero_division=0
+    )
+
+    recall = recall_score(
+        y_test,
+        y_test_pred,
+        zero_division=0
+    )
+
+    f1 = f1_score(
+        y_test,
+        y_test_pred,
+        zero_division=0
+    )
+
+    cm = confusion_matrix(
+        y_test,
+        y_test_pred
+    )
+
+    # --------------------------------------------------
+    # FINAL TEST RESULTS
+    # --------------------------------------------------
+
+    print(
+        "\n========== FINAL XGBOOST TEST EVALUATION =========="
+    )
+
+    print(f"Features: {feature_count}")
+    print(f"Threshold: {threshold}")
+    print(f"ROC-AUC: {auc_roc:.6f}")
+    print(f"PR-AUC: {auc_pr:.6f}")
+    print(f"Precision: {precision:.6f}")
+    print(f"Recall: {recall:.6f}")
+    print(f"F1 Score: {f1:.6f}")
+
+    print("\nConfusion Matrix:")
+    print(cm)
+
+    print("\nTrue Negative:", cm[0][0])
+    print("False Positive:", cm[0][1])
+    print("False Negative:", cm[1][0])
+    print("True Positive:", cm[1][1])
+
+    # --------------------------------------------------
+    # Save FINAL evaluation
+    # --------------------------------------------------
+
+    save_final_evaluation_result(
         threshold=threshold,
         auc_roc=auc_roc,
         auc_pr=auc_pr,
         precision=precision,
         recall=recall,
         f1=f1,
-        cm=cm
+        cm=cm,
+        feature_count=feature_count,
+        feature_experiment=feature_experiment
     )
+
 
 if __name__ == "__main__":
     evaluate_model()

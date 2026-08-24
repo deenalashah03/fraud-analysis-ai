@@ -25,7 +25,7 @@ def preprocess_data():
 
     #Making the datatype as Category instead of object for Categorical Columns
     X[categorical_columns] = X[categorical_columns].astype("category")
-    
+
 
     #splitting X and y into train and temp(temp because it will be further split into validation and testing)
     #30% for temp remaining all train. stratify so that distribution of isFraud is uniform.
@@ -45,8 +45,6 @@ def preprocess_data():
         stratify=y_temp,
         random_state=42
     )
-
-    # print(X_train.columns[422])
     return X_train, X_validation, X_test, y_train, y_validation, y_test
 
 if __name__ == "__main__":
