@@ -3,3 +3,5 @@ numpy
 shap
 xgboost
 scikit-learn
+fastapi
+uvicorn

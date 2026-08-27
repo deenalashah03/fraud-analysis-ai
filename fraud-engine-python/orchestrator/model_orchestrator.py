@@ -16,10 +16,14 @@ from sklearn.metrics import (
 from training.preprocess import preprocess_data
 from training.shap_analysis import analyze_shap
 from training.feature_selection import select_features
+from inference.inference_preprocess import prepare_inference_data
+
 
 from models.xgboost.xgboost_model import XGBoostModel
 
+from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve().parent.parent
 # ==================================================
 # MODEL REGISTRY CONFIGURATION
 # ==================================================
@@ -73,27 +77,17 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         # Final model artifact
         # --------------------------------------------------
 
-        "model_path": (
-            "../models/xgboost/"
-            "fraud_xgboost.json"
+        "model_path": str(
+            BASE_DIR / "models/xgboost/fraud_xgboost.json"
         ),
+        #FINAL INFERENCE CONFIG
 
-        # --------------------------------------------------
-        # Final inference configuration
-        # --------------------------------------------------
-
-        "config_path": (
-            "../models/xgboost/"
-            "fraud_xgboost_config.json"
+        "config_path": str(
+            BASE_DIR / "models/xgboost/fraud_xgboost_config.json"
         ),
-
-        # --------------------------------------------------
-        # XGBoost experiment/evaluation ledger
-        # --------------------------------------------------
-
-        "evaluation_file": (
-            "../analysis/"
-            "xgboost_model_evaluation.csv"
+        #FINAL MODEL EVALUATION PARAMS
+        "evaluation_file": str(
+            BASE_DIR / "analysis/xgboost_model_evaluation.csv"
         )
     }
 }
@@ -1617,9 +1611,9 @@ class ModelOrchestrator:
 
         return {
             "model": model_name,
-            "probability": probabilities,
-            "prediction": predictions,
-            "threshold": classification_threshold
+            "fraud_probability": float(probabilities[0] * 100),
+            "prediction": int(predictions[0]),
+            "threshold": float(classification_threshold * 100)
         }
 
 
@@ -1802,88 +1796,88 @@ def main():
     #
     # --------------------------------------------------
 
-    final_result = orchestrator.train_final(
-        model_name="xgboost",
-        shap_threshold=0.01,
-        params={
-            "max_depth": 10,
-            "learning_rate": 0.3,
-            "min_child_weight": 1,
-            "n_estimators": 4000,
-            "early_stopping_rounds": 100
-        }
-    )
-
-    print(
-        "\n========== FINAL MODEL COMPLETE =========="
-    )
-
-    print(
-        "Feature count:",
-        final_result["feature_count"]
-    )
-
-    print(
-        "Best iteration:",
-        final_result["training_result"][
-            "best_iteration"
-        ]
-    )
-
-    print(
-        "Validation AUC-PR:",
-        final_result["training_result"][
-            "validation_auc_pr"
-        ]
-    )
-
-
-    # ==================================================
-    # 6. THRESHOLD EXPERIMENT
-    # ==================================================
+    # final_result = orchestrator.train_final(
+    #     model_name="xgboost",
+    #     shap_threshold=0.01,
+    #     params={
+    #         "max_depth": 10,
+    #         "learning_rate": 0.3,
+    #         "min_child_weight": 1,
+    #         "n_estimators": 4000,
+    #         "early_stopping_rounds": 100
+    #     }
+    # )
+    # #
+    # print(
+    #     "\n========== FINAL MODEL COMPLETE =========="
+    # )
     #
-    # The final model is already trained.
+    # print(
+    #     "Feature count:",
+    #     final_result["feature_count"]
+    # )
     #
-    # No model retraining happens here.
+    # print(
+    #     "Best iteration:",
+    #     final_result["training_result"][
+    #         "best_iteration"
+    #     ]
+    # )
     #
-    # Run ONE candidate threshold at a time.
+    # print(
+    #     "Validation AUC-PR:",
+    #     final_result["training_result"][
+    #         "validation_auc_pr"
+    #     ]
+    # )
     #
-    # --------------------------------------------------
-
-    threshold_result = (
-        orchestrator.run_threshold_experiment(
-            model_name="xgboost",
-            model=final_result["model"],
-            X_validation=final_result["X_validation"],
-            y_validation=final_result["y_validation"],
-            threshold=0.4
-        )
-    )
-
-    print(
-        "\n========== THRESHOLD COMPLETE =========="
-    )
-
-    print(
-        "Threshold:",
-        threshold_result["threshold"]
-    )
-
-    print(
-        "Precision:",
-        threshold_result["precision"]
-    )
-
-    print(
-        "Recall:",
-        threshold_result["recall"]
-    )
-
-    print(
-        "F1:",
-        threshold_result["f1_score"]
-    )
-
+    #
+    # # ==================================================
+    # # 6. THRESHOLD EXPERIMENT
+    # # ==================================================
+    # #
+    # # The final model is already trained.
+    # #
+    # # No model retraining happens here.
+    # #
+    # # Run ONE candidate threshold at a time.
+    # #
+    # # --------------------------------------------------
+    #
+    # threshold_result = (
+    #     orchestrator.run_threshold_experiment(
+    #         model_name="xgboost",
+    #         model=final_result["model"],
+    #         X_validation=final_result["X_validation"],
+    #         y_validation=final_result["y_validation"],
+    #         threshold=0.4
+    #     )
+    # )
+    #
+    # print(
+    #     "\n========== THRESHOLD COMPLETE =========="
+    # )
+    #
+    # print(
+    #     "Threshold:",
+    #     threshold_result["threshold"]
+    # )
+    #
+    # print(
+    #     "Precision:",
+    #     threshold_result["precision"]
+    # )
+    #
+    # print(
+    #     "Recall:",
+    #     threshold_result["recall"]
+    # )
+    #
+    # print(
+    #     "F1:",
+    #     threshold_result["f1_score"]
+    # )
+    #
 
     # ==================================================
     # 7. SAVE INFERENCE CONFIGURATION
@@ -1896,14 +1890,14 @@ def main():
     #
     # --------------------------------------------------
 
-    orchestrator.save_inference_config(
-        model_name="xgboost",
-        selected_features=(
-            final_result["selected_features"]
-        ),
-        feature_selection_threshold=0.01,
-        classification_threshold=0.4
-    )
+    # orchestrator.save_inference_config(
+    #     model_name="xgboost",
+    #     selected_features=(
+    #         final_result["selected_features"]
+    #     ),
+    #     feature_selection_threshold=0.01,
+    #     classification_threshold=0.4
+    # )
 
     # ==================================================
     # 8. FINAL TEST EVALUATION
@@ -1915,48 +1909,108 @@ def main():
     #
     # --------------------------------------------------
 
-    final_test_result = (
-        orchestrator.evaluate_final_model(
-            model_name="xgboost",
-            model=final_result["model"],
-            X_test=final_result["X_test"],
-            y_test=final_result["y_test"],
-            threshold=0.4,
-            feature_experiment=(
-                "shap_threshold_0.01"
-            )
-        )
-    )
+    # final_test_result = (
+    #     orchestrator.evaluate_final_model(
+    #         model_name="xgboost",
+    #         model=final_result["model"],
+    #         X_test=final_result["X_test"],
+    #         y_test=final_result["y_test"],
+    #         threshold=0.4,
+    #         feature_experiment=(
+    #             "shap_threshold_0.01"
+    #         )
+    #     )
+    # )
+    #
+    # print(
+    #     "\n========== FINAL TEST COMPLETE =========="
+    # )
+    #
+    # print(
+    #     "ROC-AUC:",
+    #     final_test_result["auc_roc"]
+    # )
+    #
+    # print(
+    #     "PR-AUC:",
+    #     final_test_result["auc_pr"]
+    # )
+    #
+    # print(
+    #     "Precision:",
+    #     final_test_result["precision"]
+    # )
+    #
+    # print(
+    #     "Recall:",
+    #     final_test_result["recall"]
+    # )
+    #
+    # print(
+    #     "F1:",
+    #     final_test_result["f1_score"]
+    # )
+    #
+    # ==================================================
+# 8. RUNTIME INFERENCE TEST
+# ==================================================
+#
+# Test the saved final model using one unseen row from
+# the test set.
+#
+# This verifies:
+#   - final model loads from disk
+#   - inference configuration loads correctly
+#   - selected features are applied correctly
+#   - runtime prediction works
+#
+# No training or tuning occurs here.
+#
+# --------------------------------------------------
 
-    print(
-        "\n========== FINAL TEST COMPLETE =========="
-    )
-
-    print(
-        "ROC-AUC:",
-        final_test_result["auc_roc"]
-    )
-
-    print(
-        "PR-AUC:",
-        final_test_result["auc_pr"]
-    )
-
-    print(
-        "Precision:",
-        final_test_result["precision"]
-    )
-
-    print(
-        "Recall:",
-        final_test_result["recall"]
-    )
-
-    print(
-        "F1:",
-        final_test_result["f1_score"]
-    )
-
+    # (
+    #     _,
+    #     _,
+    #     X_test,
+    #     _,
+    #     _,
+    #     y_test
+    # ) = preprocess_data()
+    #
+    # # Select one unseen transaction.
+    # # Double brackets keep it as a DataFrame.
+    # X_unseen = X_test.iloc[[0]]
+    #
+    # actual_label = y_test.iloc[0]
+    #
+    # prediction_result = orchestrator.predict(
+    #     model_name="xgboost",
+    #     X=X_unseen
+    # )
+    #
+    # print(
+    #     "\n========== RUNTIME INFERENCE TEST =========="
+    # )
+    #
+    # print(
+    #     "Actual label:",
+    #     actual_label
+    # )
+    #
+    # print(
+    #     "Fraud probability:",
+    #     prediction_result["probability"][0]
+    # )
+    #
+    # print(
+    #     "Prediction:",
+    #     prediction_result["prediction"][0]
+    # )
+    #
+    # print(
+    #     "Classification threshold:",
+    #     prediction_result["threshold"]
+    # )
 
     # ==================================================
     # 9. RUNTIME PREDICTION
@@ -1977,25 +2031,88 @@ def main():
     #     probability + prediction
     #
     # --------------------------------------------------
+# ==================================================
+# 8. RUNTIME INFERENCE TEST
+# ==================================================
 
+    # print(
+    #     "\n========== RUNTIME INFERENCE TEST =========="
+    # )
+    #
+    # # Take one unseen transaction from the test set
+    # unseen_transaction = (
+    #     final_result["X_test"]
+    #     .iloc[[0]]
+    # )
+    #
+    # actual_label = (
+    #     final_result["y_test"]
+    #     .iloc[0]
+    # )
+    #
+    # # Simulate an incoming API request
+    # transaction_request = (
+    #     unseen_transaction
+    #     .iloc[0]
+    #     .to_dict()
+    # )
+    # # Prepare incoming transaction for inference
+    # prepared_data = prepare_inference_data(
+    #     transaction_request
+    # )
+    #
+    # # Run runtime prediction
     # prediction_result = orchestrator.predict(
     #     model_name="xgboost",
-    #     X=prepared_inference_data
+    #     X=prepared_data
     # )
     #
     # print(
-    #     "\n========== PREDICTION =========="
+    #     "Actual label:",
+    #     actual_label
     # )
     #
     # print(
-    #     "Probability:",
-    #     prediction_result["probability"]
+    #     "Fraud probability:",
+    #     prediction_result["probability"][0]
     # )
     #
     # print(
     #     "Prediction:",
-    #     prediction_result["prediction"]
+    #     prediction_result["prediction"][0]
     # )
+    #
+    # print(
+    #     "Classification threshold:",
+    #     prediction_result["threshold"]
+    # )
+    #
+    #
+    #
+#     transaction_request = {
+#         key: (
+#             value.item()
+#             if hasattr(value, "item")
+#             else value
+#         )
+#         for key, value in transaction_request.items()
+#     }
+#
+# # Save request payload
+#     with open(
+#             "sample_transaction.json",
+#             "w",
+#             encoding="utf-8"
+#     ) as file:
+#         json.dump(
+#             transaction_request,
+#             file,
+#             indent=4,
+#             default=str
+#         )
+#
+#     print("Sample transaction JSON created.")
+#     print("Actual label:", final_result["y_test"].iloc[0])
 
 
 if __name__ == "__main__":
