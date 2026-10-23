@@ -1510,9 +1510,6 @@ class ModelOrchestrator:
                 file
             )
 
-        selected_features = inference_config[
-            "selected_features"
-        ]
 
         classification_threshold = (
             inference_config[
@@ -1534,26 +1531,13 @@ class ModelOrchestrator:
         # Check required features
         # --------------------------------------------------
 
-        missing_features = [
-            feature
-            for feature in selected_features
-            if feature not in X.columns
-        ]
 
-        if missing_features:
-
-            raise ValueError(
-                "Inference input is missing required "
-                f"features: {missing_features}"
-            )
 
         # --------------------------------------------------
         # Select features in exact training order
         # --------------------------------------------------
 
-        X_selected = X[
-            selected_features
-        ].copy()
+        X_selected = X.copy()
 
         # --------------------------------------------------
         # Create model wrapper

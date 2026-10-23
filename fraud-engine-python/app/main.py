@@ -8,6 +8,7 @@ from inference.inference_preprocess import (
 from orchestrator.model_orchestrator import (
     ModelOrchestrator
 )
+from rules.rule_engine import RuleEngine
 
 
 app = FastAPI(
@@ -15,7 +16,7 @@ app = FastAPI(
 )
 
 orchestrator = ModelOrchestrator()
-
+rule_engine = RuleEngine()
 
 @app.get("/health")
 def health():
@@ -48,6 +49,9 @@ def predict(
             model_name="xgboost",
             X=prepared_data
         )
+        matched_rules = rule_engine.evaluate_rules(
+            transaction
+        )
 
         probability = float(result["fraud_probability"])
         prediction = int(result["prediction"])
@@ -57,7 +61,9 @@ def predict(
                 "FRAUD"
                 if prediction == 1
                 else "NOT_FRAUD"
-            )
+            ),
+            "matched_rules": matched_rules
+
         }
 
     except ValueError as error:
